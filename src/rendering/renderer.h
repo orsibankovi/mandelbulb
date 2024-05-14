@@ -19,7 +19,7 @@ public:
 
 private:
     float zoom = 1.0f;
-    float zoom_div = 0.0;
+    float zoom_div = 1.0;
     float offsetX = 0.0;
     float offsetY = 0.0;
     glm::vec3 theta = { 0.0, 0.0, 0.0 };

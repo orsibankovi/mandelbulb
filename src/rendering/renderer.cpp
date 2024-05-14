@@ -23,7 +23,7 @@ void Renderer::update(double dt)
     theta[1] += rotation[1];
     theta[2] += rotation[2];
 
-    zoom += zoom_div;
+    zoom *= zoom_div;
 }
 
 void Renderer::initialize()
@@ -73,15 +73,15 @@ void Renderer::initialize()
 
     theInputManager.registerUtf8KeyHandler("g", [&](auto /* mod */, auto action) {
         if (action == Action::Press)
-            zoom_div += 0.05f;
+            zoom_div = 1.05;
         if (action == Action::Release)
-            zoom_div -= 0.05f;
+            zoom_div = 1.00;
         });
     theInputManager.registerUtf8KeyHandler("h", [&](auto /* mod */, auto action) {
         if (action == Action::Press)
-            zoom_div -= 0.05f;
+            zoom_div = 1.0 / 1.05;
         if (action == Action::Release)
-            zoom_div += 0.05f;
+            zoom_div = 1.00;
         });
 
 
