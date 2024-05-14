@@ -18,4 +18,5 @@ void renderCuda(float zoom, float offsetX, float offsetY, float t1, float t2, fl
 void freeExportedSemaphores();
 void exportSemaphoresToCuda(void* cudaWaitsForVulkanSemaphoreHandle, void* vulkanWaitsForCudaSemaphoreHandle);
 
+
 #endif //CUDA_INTEROP_CUH

@@ -19,14 +19,15 @@ using namespace glfwim;
 void Renderer::update(double dt)
 {
     /* TODO: pan and zoom */
+    theta[0] += rotation[0];
+    theta[1] += rotation[1];
+    theta[2] += rotation[2];
 
+    zoom += zoom_div;
 }
 
 void Renderer::initialize()
 {
-    zoom = 1.0f;
-    offsetX = 0.0;
-    offsetY = 0.0;
     query.create();
     createResources();
     createPipelineLayout();
@@ -35,42 +36,53 @@ void Renderer::initialize()
 
     theInputManager.registerUtf8KeyHandler("w", [&](auto /* mod */, auto action) {
         if (action == Action::Press)
-            offsetY -= 50.0f / zoom;
+            rotation[1] += 0.05f;
+        if (action == Action::Release)
+            rotation[1] -= 0.05f;
         });
     theInputManager.registerUtf8KeyHandler("s", [&](auto /* mod */, auto action) {
         if (action == Action::Press)
-            offsetY += 50.0f / zoom;
+            rotation[1] -= 0.05f;
+        if (action == Action::Release)
+            rotation[1] += 0.05f;
         });
     theInputManager.registerUtf8KeyHandler("a", [&](auto /* mod */, auto action) {
         if (action == Action::Press)
-            offsetX -= 50.0f / zoom;
+            rotation[2] -= 0.05f;
+        if (action == Action::Release)
+            rotation[2] += 0.05f;
         });
     theInputManager.registerUtf8KeyHandler("d", [&](auto /* mod */, auto action) {
         if (action == Action::Press)
-            offsetX += 50.0f / zoom;
+            rotation[2] += 0.05f;
+        if (action == Action::Release)
+            rotation[2] -= 0.05f;
         });
     theInputManager.registerUtf8KeyHandler("q", [&](auto /* mod */, auto action) {
         if (action == Action::Press)
-            zoom *= 1.05f;
+            rotation[0] += 0.05f;
+        if (action == Action::Release)
+            rotation[0] -= 0.05f;
         });
     theInputManager.registerUtf8KeyHandler("e", [&](auto /* mod */, auto action) {
         if (action == Action::Press)
-            zoom /= 1.05f;
+            rotation[0] -= 0.05f;
+        if (action == Action::Release)
+            rotation[0] += 0.05f;
         });
 
-    theInputManager.registerUtf8KeyHandler("j", [&](auto /* mod */, auto action) {
+    theInputManager.registerUtf8KeyHandler("g", [&](auto /* mod */, auto action) {
         if (action == Action::Press)
-            theta[0] += 0.1f;
+            zoom_div += 0.05f;
+        if (action == Action::Release)
+            zoom_div -= 0.05f;
         });
-    theInputManager.registerUtf8KeyHandler("k", [&](auto /* mod */, auto action) {
+    theInputManager.registerUtf8KeyHandler("h", [&](auto /* mod */, auto action) {
         if (action == Action::Press)
-            theta[1] += 0.1f;
+            zoom_div -= 0.05f;
+        if (action == Action::Release)
+            zoom_div += 0.05f;
         });
-    theInputManager.registerUtf8KeyHandler("l", [&](auto /* mod */, auto action) {
-        if (action == Action::Press)
-            theta[2] += 0.1f;
-        });
-
 
 
     theInputManager.registerMouseButtonHandler(MouseButton::Left, [&](auto /* mod */, auto action) {
@@ -90,6 +102,7 @@ void Renderer::initialize()
         }
         });
 
+
     theInputManager.registerCursorPositionHandler([&](double x, double y) {
         if (directionChanging) {
             glm::vec2 delta = glm::vec2{ (float)x, (float)y } - lastCursorPos;
@@ -98,8 +111,8 @@ void Renderer::initialize()
         }
         lastCursorPos = { x, y };
         });
-
 }
+
 
 void Renderer::destroy()
 {

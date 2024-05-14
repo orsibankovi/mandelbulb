@@ -19,9 +19,11 @@ public:
 
 private:
     float zoom = 1.0f;
+    float zoom_div = 0.0;
     float offsetX = 0.0;
     float offsetY = 0.0;
     glm::vec3 theta = { 0.0, 0.0, 0.0 };
+    glm::vec3 rotation = { 0.0, 0.0, 0.0 };
     bool directionChanging = false;
     glm::vec2 lastCursorPos = { 0, 0 };
 
