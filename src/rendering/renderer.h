@@ -16,6 +16,7 @@ public:
     void destroySwapChainDependentComponents();
     void render(const RenderContext& ctx);
     void update(double dt);
+    void update_helper(float& value, const char* key1, const char* key2);
 
 private:
     float zoom = 1.0f;

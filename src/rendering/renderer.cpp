@@ -16,6 +16,21 @@
 
 using namespace glfwim;
 
+void Renderer::update_helper(float& value, const char *key1, const char* key2) {
+    theInputManager.registerUtf8KeyHandler(key1, [&](auto /* mod */, auto action) {
+        if (action == Action::Press)
+            value -= 0.05f;
+        if (action == Action::Release)
+            value += 0.05f;
+        });
+    theInputManager.registerUtf8KeyHandler(key2, [&](auto /* mod */, auto action) {
+        if (action == Action::Press)
+            value += 0.05f;
+        if (action == Action::Release)
+            value -= 0.05f;
+        });
+};
+
 void Renderer::update(double dt)
 {
     /* TODO: pan and zoom */
@@ -34,42 +49,11 @@ void Renderer::initialize()
     createFsPipeline();
     createSyncObjects();
 
-    theInputManager.registerUtf8KeyHandler("w", [&](auto /* mod */, auto action) {
-        if (action == Action::Press)
-            rotation[1] += 0.05f;
-        if (action == Action::Release)
-            rotation[1] -= 0.05f;
-        });
-    theInputManager.registerUtf8KeyHandler("s", [&](auto /* mod */, auto action) {
-        if (action == Action::Press)
-            rotation[1] -= 0.05f;
-        if (action == Action::Release)
-            rotation[1] += 0.05f;
-        });
-    theInputManager.registerUtf8KeyHandler("a", [&](auto /* mod */, auto action) {
-        if (action == Action::Press)
-            rotation[2] -= 0.05f;
-        if (action == Action::Release)
-            rotation[2] += 0.05f;
-        });
-    theInputManager.registerUtf8KeyHandler("d", [&](auto /* mod */, auto action) {
-        if (action == Action::Press)
-            rotation[2] += 0.05f;
-        if (action == Action::Release)
-            rotation[2] -= 0.05f;
-        });
-    theInputManager.registerUtf8KeyHandler("q", [&](auto /* mod */, auto action) {
-        if (action == Action::Press)
-            rotation[0] += 0.05f;
-        if (action == Action::Release)
-            rotation[0] -= 0.05f;
-        });
-    theInputManager.registerUtf8KeyHandler("e", [&](auto /* mod */, auto action) {
-        if (action == Action::Press)
-            rotation[0] -= 0.05f;
-        if (action == Action::Release)
-            rotation[0] += 0.05f;
-        });
+
+    update_helper(rotation[1], "w", "s");
+    update_helper(rotation[2], "a", "d");
+    update_helper(rotation[0], "e", "q");
+
 
     theInputManager.registerUtf8KeyHandler("g", [&](auto /* mod */, auto action) {
         if (action == Action::Press)
@@ -106,8 +90,8 @@ void Renderer::initialize()
     theInputManager.registerCursorPositionHandler([&](double x, double y) {
         if (directionChanging) {
             glm::vec2 delta = glm::vec2{ (float)x, (float)y } - lastCursorPos;
-            offsetX -= delta.x * 0.5f;
-            offsetY -= delta.y * 0.5f;
+            offsetX -= delta.x * 0.005f;
+            offsetY -= delta.y * 0.005f;
         }
         lastCursorPos = { x, y };
         });

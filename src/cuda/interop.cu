@@ -133,7 +133,7 @@ typedef struct {
 __device__ ray get_ray(const float& u, const float& v, float zoom, float offsetX, float offsetY) {
     ray r;
     r.o = make_float3(-3.0, 0.1, 0.1);
-    r.d = normalize(make_float3(1.0 * zoom, u + offsetX / 1000, v + offsetY / 1000));
+    r.d = normalize(make_float3(1.0 * zoom, u + offsetX, v + offsetY));
     return r;
 }
 
@@ -147,8 +147,8 @@ __device__ float mandelbulb(float3 pos, float3 rotation) {
 
     // Rotate around Y axis
     float temp_x = z.x;
-    z.x = z.x * cos(rotation.y) + z.z * sin(rotation.y);
-    z.z = -temp_x * sin(rotation.y) + z.z * cos(rotation.y);
+    z.x = z.x * cos(rotation.y) - z.z * sin(rotation.y);
+    z.z = temp_x * sin(rotation.y) + z.z * cos(rotation.y);
 
     // Rotate around Z axis
     temp_x = z.x;
