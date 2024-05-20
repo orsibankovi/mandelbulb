@@ -13,7 +13,7 @@ void exportVulkanImageToCuda_R8G8B8A8Unorm(void* mem, VkDeviceSize size, VkDevic
 // frees the exported resources
 // the resources are stored in global variables for simplicity so resources must be freed before a new export
 void freeExportedVulkanImage();
-void renderCuda(float zoom, float offsetX, float offsetY, float t1, float t2, float t3);
+void renderCuda(float zoom, float offsetX, float offsetY, float t1, float t2, float t3, bool normal_surface);
 
 void freeExportedSemaphores();
 void exportSemaphoresToCuda(void* cudaWaitsForVulkanSemaphoreHandle, void* vulkanWaitsForCudaSemaphoreHandle);

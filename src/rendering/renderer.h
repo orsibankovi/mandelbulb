@@ -27,6 +27,7 @@ private:
     glm::vec3 rotation = { 0.0, 0.0, 0.0 };
     bool directionChanging = false;
     glm::vec2 lastCursorPos = { 0, 0 };
+    bool normal_surface = false;
 
     struct DependentComponents {
         vk::Pipeline pipeline = nullptr;

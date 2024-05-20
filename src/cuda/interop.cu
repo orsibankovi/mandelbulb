@@ -157,14 +157,14 @@ __device__ float mandelbulb(float3 pos, float3 rotation) {
 
     float derivative = 1.0;
     float radius = 0.0;
-    int iterations = 20;
+    int iterations = 8;
     float power = 12.0;
 
     for (int i = 0; i < iterations; i++) {
 
         radius = length(z);
 
-        if (radius > 4.0) break;
+        if (radius > 2.0) break;
 
         // convert to spherical coordinates
         float theta = acos(z.z / radius);
@@ -184,7 +184,15 @@ __device__ float mandelbulb(float3 pos, float3 rotation) {
     return 0.5 * log(radius) * radius / derivative;
 }
 
-__device__ float march(ray r, float3 rotation) {
+__device__ float3 calculateNormal(float3 pos, float3 rotation) {
+    float epsilon = 0.0005;
+    float dx = mandelbulb(make_float3(pos.x + epsilon, pos.y, pos.z), rotation) - mandelbulb(make_float3(pos.x - epsilon, pos.y, pos.z), rotation);
+    float dy = mandelbulb(make_float3(pos.x, pos.y + epsilon, pos.z), rotation) - mandelbulb(make_float3(pos.x, pos.y - epsilon, pos.z), rotation);
+    float dz = mandelbulb(make_float3(pos.x, pos.y, pos.z + epsilon), rotation) - mandelbulb(make_float3(pos.x, pos.y, pos.z - epsilon), rotation);
+    return normalize(make_float3(dx, dy, dz));
+}
+
+__device__ float march(ray r, float3 rotation, float3* hitPos) {
     float total_dist = 0.0;
     int max_ray_steps = 48;
     float min_distance = 0.0005;
@@ -194,35 +202,43 @@ __device__ float march(ray r, float3 rotation) {
         float3 p = r.origin + r.direction * total_dist;
         float distance = mandelbulb(p, rotation);
         total_dist += distance;
-        if (distance < min_distance) break;
+        if (distance < min_distance) {
+            *hitPos = p;
+            break;
+        }
     }
     return 1.0 - (float)steps / (float)max_ray_steps;
 }
 
 
-__global__ void MandelbulbDraw(cudaSurfaceObject_t dstSurface, size_t width, size_t height, float zoom, float offsetX, float offsetY, float3 rotation)
+__global__ void MandelbulbDraw(cudaSurfaceObject_t dstSurface, size_t width, size_t height, float zoom, float offsetX, float offsetY, float3 rotation, bool normal_surface)
 {
-	unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
-	unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
+    unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
+    unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
 
-	if (x >= width || y >= height) return;
+    if (x >= width || y >= height) return;
 
-    float min_w_h = (float) min(width, height);
+    float min_w_h = (float)min(width, height);
 
     float ar = (float)width / (float)height;
     float u = (float)x / min_w_h - ar * 0.5f;
     float v = (float)y / min_w_h - 0.5f;
 
     ray r = get_ray(u, v, zoom, offsetX, offsetY);
-    float c = march(r, rotation);
+    float3 hitPos;
+    float c = march(r, rotation, &hitPos);
 
+    float4 dataOut = make_float4(c * 0.3f, c * 0.3f, c * 1.5f, 1.0f);
 
-	float4 dataOut = make_float4(c * 0.5f, c * 0.5f, c, 1.0f);
+    if (normal_surface) {
+        float3 normal = calculateNormal(hitPos, rotation) * 0.6f + make_float3(0.4f, 0.4f, 0.4f);
+        dataOut = make_float4(normal.x, normal.y, normal.z, 1.0f);
+	}
 
-	surf2Dwrite(rgbaFloatToInt(dataOut), dstSurface, x * 4, y);
+    surf2Dwrite(rgbaFloatToInt(dataOut), dstSurface, x * 4, y);
 }
 
-void renderCuda(float zoom, float offsetX, float offsetY, float t1, float t2, float t3)
+void renderCuda(float zoom, float offsetX, float offsetY, float t1, float t2, float t3, bool normal_surface)
 {
     cudaExternalSemaphoreWaitParams extSemaphoreWaitParams;
     memset(&extSemaphoreWaitParams, 0, sizeof(extSemaphoreWaitParams));
@@ -233,7 +249,7 @@ void renderCuda(float zoom, float offsetX, float offsetY, float t1, float t2, fl
     dim3 dimGrid{ imageWidth / nthreads + 1, imageHeight / nthreads + 1};
     dim3 dimBlock{ nthreads, nthreads };
     float3 rotation = make_float3(t1, t2, t3);
-    MandelbulbDraw << <dimGrid, dimBlock >> > (surfaceObject, imageWidth, imageHeight, zoom, offsetX, offsetY, rotation);
+    MandelbulbDraw << <dimGrid, dimBlock >> > (surfaceObject, imageWidth, imageHeight, zoom, offsetX, offsetY, rotation, normal_surface);
     checkCudaError(cudaGetLastError());
     //checkCudaError(cudaDeviceSynchronize()); // not optimal! should be synced with vulkan using semaphores
 

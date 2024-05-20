@@ -68,6 +68,12 @@ void Renderer::initialize()
             zoom_div = 1.00;
         });
 
+    theInputManager.registerUtf8KeyHandler("n", [&](auto /* mod */, auto action) {
+        if (action == Action::Press) {
+            normal_surface = !normal_surface;
+        }
+        });
+
 
     theInputManager.registerMouseButtonHandler(MouseButton::Left, [&](auto /* mod */, auto action) {
         if (action == Action::Press) {
@@ -166,7 +172,7 @@ void Renderer::render(const RenderContext& ctx)
     
     ctx.cmd.beginRendering(renderingInfo); // start render pass
 
-    renderCuda(zoom, offsetX, offsetY, theta[0], theta[1], theta[2]);
+    renderCuda(zoom, offsetX, offsetY, theta[0], theta[1], theta[2], normal_surface);
 
     ctx.cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, fsPipelineLayout, 0, 1, &perFrameDescriptorSets[ctx.frameID], 0, nullptr);
     ctx.cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, fsPipeline);
