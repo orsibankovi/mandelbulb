@@ -96,8 +96,8 @@ void Renderer::initialize()
     theInputManager.registerCursorPositionHandler([&](double x, double y) {
         if (directionChanging) {
             glm::vec2 delta = glm::vec2{ (float)x, (float)y } - lastCursorPos;
-            offsetX -= delta.x * 0.005f;
-            offsetY -= delta.y * 0.005f;
+            offsetX -= delta.x * 0.002f;
+            offsetY -= delta.y * 0.002f;
         }
         lastCursorPos = { x, y };
         });

@@ -132,7 +132,7 @@ typedef struct {
 
 __device__ ray get_ray(const float& u, const float& v, float zoom, float offsetX, float offsetY) {
     ray r;
-    r.origin = make_float3(-3.5, 0.0, 0.0);
+    r.origin = make_float3(-3.0, 0.05, 0.05);
     r.direction = normalize(make_float3(1.0 * zoom, u + offsetX, v + offsetY));
     return r;
 }
@@ -157,7 +157,7 @@ __device__ float mandelbulb(float3 pos, float3 rotation) {
 
     float derivative = 1.0;
     float radius = 0.0;
-    int iterations = 8;
+    int iterations = 12;
     float power = 12.0;
 
     for (int i = 0; i < iterations; i++) {
@@ -194,7 +194,7 @@ __device__ float3 calculateNormal(float3 pos, float3 rotation) {
 
 __device__ float march(ray r, float3 rotation, float3* hitPos) {
     float total_dist = 0.0;
-    int max_ray_steps = 48;
+    int max_ray_steps = 50;
     float min_distance = 0.0005;
 
     int steps;
@@ -228,10 +228,10 @@ __global__ void MandelbulbDraw(cudaSurfaceObject_t dstSurface, size_t width, siz
     float3 hitPos;
     float c = march(r, rotation, &hitPos);
 
-    float4 dataOut = make_float4(c * 0.3f, c * 0.3f, c * 1.5f, 1.0f);
+    float4 dataOut = make_float4(c * 0.5f, c * 0.5f, c * 1.0f, 1.0f);
 
     if (normal_surface) {
-        float3 normal = calculateNormal(hitPos, rotation) * 0.6f + make_float3(0.4f, 0.4f, 0.4f);
+        float3 normal = calculateNormal(hitPos, rotation) * 0.5f + make_float3(0.4f, 0.4f, 0.4f);
         dataOut = make_float4(normal.x, normal.y, normal.z, 1.0f);
 	}
 
