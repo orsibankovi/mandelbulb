@@ -166,10 +166,7 @@ void Renderer::render(const RenderContext& ctx)
     
     ctx.cmd.beginRendering(renderingInfo); // start render pass
 
-    // not optimal!! should use external synchronization with semaphores. Must be done in vulkan_engine.cpp at submission
-    vulkanWaitsForCudaSemaphore;
     renderCuda(zoom, offsetX, offsetY, theta[0], theta[1], theta[2]);
-    cudaWaitsForVulkanSemaphore;
 
     ctx.cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, fsPipelineLayout, 0, 1, &perFrameDescriptorSets[ctx.frameID], 0, nullptr);
     ctx.cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, fsPipeline);

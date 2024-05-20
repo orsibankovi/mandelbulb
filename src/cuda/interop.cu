@@ -222,11 +222,21 @@ __global__ void MandelbulbDraw(cudaSurfaceObject_t dstSurface, size_t width, siz
 
 void renderCuda(float zoom, float offsetX, float offsetY, float t1, float t2, float t3)
 {
+    cudaExternalSemaphoreWaitParams extSemaphoreWaitParams;
+    memset(&extSemaphoreWaitParams, 0, sizeof(extSemaphoreWaitParams));
+    extSemaphoreWaitParams.params.fence.value = 0;
+    extSemaphoreWaitParams.flags = 0; checkCudaError(cudaWaitExternalSemaphoresAsync(&cudaWaitsForVulkanSemaphore, &extSemaphoreWaitParams, 1));
+
     uint32_t nthreads = 32;
     dim3 dimGrid{ imageWidth / nthreads + 1, imageHeight / nthreads + 1};
     dim3 dimBlock{ nthreads, nthreads };
     float3 rotation = make_float3(t1, t2, t3);
     MandelbulbDraw << <dimGrid, dimBlock >> > (surfaceObject, imageWidth, imageHeight, zoom, offsetX, offsetY, rotation);
     checkCudaError(cudaGetLastError());
-    checkCudaError(cudaDeviceSynchronize()); // not optimal! should be synced with vulkan using semaphores
+    //checkCudaError(cudaDeviceSynchronize()); // not optimal! should be synced with vulkan using semaphores
+
+    cudaExternalSemaphoreSignalParams extSemaphoreSignalParams;
+    memset(&extSemaphoreSignalParams, 0, sizeof(extSemaphoreSignalParams));
+    extSemaphoreSignalParams.params.fence.value = 0;
+    extSemaphoreSignalParams.flags = 0; checkCudaError(cudaSignalExternalSemaphoresAsync(&vulkanWaitsForCudaSemaphore, &extSemaphoreSignalParams, 1));
 }
