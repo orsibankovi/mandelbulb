@@ -126,14 +126,14 @@ __device__ float3 normalize(const float3 vec) {
 }
 
 typedef struct {
-    float3 o;
-    float3 d;
+    float3 origin;
+    float3 direction;
 } ray;
 
 __device__ ray get_ray(const float& u, const float& v, float zoom, float offsetX, float offsetY) {
     ray r;
-    r.o = make_float3(-3.0, 0.1, 0.1);
-    r.d = normalize(make_float3(1.0 * zoom, u + offsetX, v + offsetY));
+    r.origin = make_float3(-3.5, 0.0, 0.0);
+    r.direction = normalize(make_float3(1.0 * zoom, u + offsetX, v + offsetY));
     return r;
 }
 
@@ -155,32 +155,33 @@ __device__ float mandelbulb(float3 pos, float3 rotation) {
     z.x = z.x * cos(rotation.z) - z.y * sin(rotation.z);
     z.y = temp_x * sin(rotation.z) + z.y * cos(rotation.z);
 
-    float dr = 1.0;
-    float r = 0.0;
-    int iterations = 16;
-    float Bailout = 4.0;
-    float n = 12.0;
+    float derivative = 1.0;
+    float radius = 0.0;
+    int iterations = 20;
+    float power = 12.0;
 
     for (int i = 0; i < iterations; i++) {
-        r = length(z);
-        if (r > Bailout) break;
+
+        radius = length(z);
+
+        if (radius > 4.0) break;
 
         // convert to spherical coordinates
-        float theta = acos(z.z / r);
+        float theta = acos(z.z / radius);
         float phi = atan2(z.y, z.x);
-        dr = powf(r, n - 1.0) * n * dr + 1.0;
+        derivative = powf(radius, power - 1.0) * power * derivative + 1.0;
 
         // scale and rotate the point
-        float zr = pow(r, n);
-        theta = theta * n;
-        phi = phi * n;
+        float zr = pow(radius, power);
+        theta = theta * power;
+        phi = phi * power;
 
         // convert back to cartesian coordinates
         z = make_float3(sin(theta) * cos(phi), sin(phi) * sin(theta), cos(theta)) * zr;
 
         z = z + pos;
     }
-    return 0.5 * log(r) * r / dr;
+    return 0.5 * log(radius) * radius / derivative;
 }
 
 __device__ float march(ray r, float3 rotation) {
@@ -190,7 +191,7 @@ __device__ float march(ray r, float3 rotation) {
 
     int steps;
     for (steps = 0; steps < max_ray_steps; ++steps) {
-        float3 p = r.o + r.d * total_dist;
+        float3 p = r.origin + r.direction * total_dist;
         float distance = mandelbulb(p, rotation);
         total_dist += distance;
         if (distance < min_distance) break;
@@ -214,6 +215,7 @@ __global__ void MandelbulbDraw(cudaSurfaceObject_t dstSurface, size_t width, siz
 
     ray r = get_ray(u, v, zoom, offsetX, offsetY);
     float c = march(r, rotation);
+
 
 	float4 dataOut = make_float4(c * 0.5f, c * 0.5f, c, 1.0f);
 
